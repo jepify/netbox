@@ -14,6 +14,7 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.validators import URLValidator
 from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
+
 try:
     import sentry_sdk
 except ModuleNotFoundError:
@@ -101,24 +102,26 @@ DATE_FORMAT = getattr(configuration, 'DATE_FORMAT', 'N j, Y')
 DATETIME_FORMAT = getattr(configuration, 'DATETIME_FORMAT', 'N j, Y g:i a')
 DEBUG = getattr(configuration, 'DEBUG', False)
 DEFAULT_DASHBOARD = getattr(configuration, 'DEFAULT_DASHBOARD', None)
-DEFAULT_PERMISSIONS = getattr(configuration, 'DEFAULT_PERMISSIONS', {
-    # Permit users to manage their own bookmarks
-    'extras.view_bookmark': ({'user': '$user'},),
-    'extras.add_bookmark': ({'user': '$user'},),
-    'extras.change_bookmark': ({'user': '$user'},),
-    'extras.delete_bookmark': ({'user': '$user'},),
-    # Permit users to manage their own API tokens
-    'users.view_token': ({'user': '$user'},),
-    'users.add_token': ({'user': '$user'},),
-    'users.change_token': ({'user': '$user'},),
-    'users.delete_token': ({'user': '$user'},),
-})
+DEFAULT_PERMISSIONS = getattr(
+    configuration,
+    'DEFAULT_PERMISSIONS',
+    {
+        # Permit users to manage their own bookmarks
+        'extras.view_bookmark': ({'user': '$user'},),
+        'extras.add_bookmark': ({'user': '$user'},),
+        'extras.change_bookmark': ({'user': '$user'},),
+        'extras.delete_bookmark': ({'user': '$user'},),
+        # Permit users to manage their own API tokens
+        'users.view_token': ({'user': '$user'},),
+        'users.add_token': ({'user': '$user'},),
+        'users.change_token': ({'user': '$user'},),
+        'users.delete_token': ({'user': '$user'},),
+    },
+)
 DEVELOPER = getattr(configuration, 'DEVELOPER', False)
 DOCS_ROOT = getattr(configuration, 'DOCS_ROOT', os.path.join(os.path.dirname(BASE_DIR), 'docs'))
 EMAIL = getattr(configuration, 'EMAIL', {})
-EVENTS_PIPELINE = getattr(configuration, 'EVENTS_PIPELINE', (
-    'extras.events.process_event_queue',
-))
+EVENTS_PIPELINE = getattr(configuration, 'EVENTS_PIPELINE', ('extras.events.process_event_queue',))
 EXEMPT_VIEW_PERMISSIONS = getattr(configuration, 'EXEMPT_VIEW_PERMISSIONS', [])
 FIELD_CHOICES = getattr(configuration, 'FIELD_CHOICES', {})
 FILE_UPLOAD_MAX_MEMORY_SIZE = getattr(configuration, 'FILE_UPLOAD_MAX_MEMORY_SIZE', 2621440)
@@ -205,13 +208,9 @@ if RELEASE_CHECK_URL:
 if 'ENGINE' not in DATABASE:
     # Only PostgreSQL is supported
     if METRICS_ENABLED:
-        DATABASE.update({
-            'ENGINE': 'django_prometheus.db.backends.postgresql'
-        })
+        DATABASE.update({'ENGINE': 'django_prometheus.db.backends.postgresql'})
     else:
-        DATABASE.update({
-            'ENGINE': 'django.db.backends.postgresql'
-        })
+        DATABASE.update({'ENGINE': 'django.db.backends.postgresql'})
 
 DATABASES = {
     'default': DATABASE,
@@ -243,6 +242,7 @@ if STORAGE_BACKEND is not None:
             if name in STORAGE_CONFIG:
                 return STORAGE_CONFIG[name]
             return globals().get(name, default)
+
         storages.utils.setting = _setting
 
 if STORAGE_CONFIG and STORAGE_BACKEND is None:
@@ -258,17 +258,12 @@ if STORAGE_CONFIG and STORAGE_BACKEND is None:
 
 # Background task queuing
 if 'tasks' not in REDIS:
-    raise ImproperlyConfigured(
-        "REDIS section in configuration.py is missing the 'tasks' subsection."
-    )
+    raise ImproperlyConfigured("REDIS section in configuration.py is missing the 'tasks' subsection.")
 TASKS_REDIS = REDIS['tasks']
 TASKS_REDIS_HOST = TASKS_REDIS.get('HOST', 'localhost')
 TASKS_REDIS_PORT = TASKS_REDIS.get('PORT', 6379)
 TASKS_REDIS_SENTINELS = TASKS_REDIS.get('SENTINELS', [])
-TASKS_REDIS_USING_SENTINEL = all([
-    isinstance(TASKS_REDIS_SENTINELS, (list, tuple)),
-    len(TASKS_REDIS_SENTINELS) > 0
-])
+TASKS_REDIS_USING_SENTINEL = all([isinstance(TASKS_REDIS_SENTINELS, (list, tuple)), len(TASKS_REDIS_SENTINELS) > 0])
 TASKS_REDIS_SENTINEL_SERVICE = TASKS_REDIS.get('SENTINEL_SERVICE', 'default')
 TASKS_REDIS_SENTINEL_TIMEOUT = TASKS_REDIS.get('SENTINEL_TIMEOUT', 10)
 TASKS_REDIS_USERNAME = TASKS_REDIS.get('USERNAME', '')
@@ -280,9 +275,7 @@ TASKS_REDIS_CA_CERT_PATH = TASKS_REDIS.get('CA_CERT_PATH', False)
 
 # Caching
 if 'caching' not in REDIS:
-    raise ImproperlyConfigured(
-        "REDIS section in configuration.py is missing caching subsection."
-    )
+    raise ImproperlyConfigured("REDIS section in configuration.py is missing caching subsection.")
 CACHING_REDIS_HOST = REDIS['caching'].get('HOST', 'localhost')
 CACHING_REDIS_PORT = REDIS['caching'].get('PORT', 6379)
 CACHING_REDIS_DATABASE = REDIS['caching'].get('DATABASE', 0)
@@ -302,7 +295,7 @@ CACHES = {
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             'PASSWORD': CACHING_REDIS_PASSWORD,
-        }
+        },
     }
 }
 
@@ -509,7 +502,7 @@ MAINTENANCE_EXEMPT_PATHS = (
     f'/{BASE_PATH}extras/config-revisions/',  # Allow modifying the configuration
     LOGIN_URL,
     LOGIN_REDIRECT_URL,
-    LOGOUT_REDIRECT_URL
+    LOGOUT_REDIRECT_URL,
 )
 
 SERIALIZATION_MODULES = {
@@ -537,7 +530,7 @@ if SENTRY_ENABLED:
         traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
         send_default_pii=True,
         http_proxy=HTTP_PROXIES.get('http') if HTTP_PROXIES else None,
-        https_proxy=HTTP_PROXIES.get('https') if HTTP_PROXIES else None
+        https_proxy=HTTP_PROXIES.get('https') if HTTP_PROXIES else None,
     )
     # Assign any configured tags
     for k, v in SENTRY_TAGS.items():
@@ -625,9 +618,7 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.JSONParser',
         'rest_framework.parsers.MultiPartParser',
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'netbox.api.authentication.TokenPermissions',
-    ),
+    'DEFAULT_PERMISSION_CLASSES': ('netbox.api.authentication.TokenPermissions',),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
         'netbox.api.renderers.FormlessBrowsableAPIRenderer',
@@ -655,10 +646,12 @@ SPECTACULAR_SETTINGS = {
     'VERSION': VERSION,
     'COMPONENT_SPLIT_REQUEST': True,
     'REDOC_DIST': 'SIDECAR',
-    'SERVERS': [{
-        'url': BASE_PATH,
-        'description': 'NetBox',
-    }],
+    'SERVERS': [
+        {
+            'url': BASE_PATH,
+            'description': 'NetBox',
+        }
+    ],
     'SWAGGER_UI_DIST': 'SIDECAR',
     'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
     'POSTPROCESSING_HOOKS': [],
@@ -672,6 +665,9 @@ GRAPHENE = {
     # Avoids naming collision on models with 'type' field; see
     # https://github.com/graphql-python/graphene-django/issues/185
     'DJANGO_CHOICE_FIELD_ENUM_V3_NAMING': True,
+    'MIDDLEWARE': [
+        'graphene_django.debug.DjangoDebugMiddleware',
+    ],
 }
 
 
@@ -684,9 +680,7 @@ if TASKS_REDIS_USING_SENTINEL:
         'SENTINELS': TASKS_REDIS_SENTINELS,
         'MASTER_NAME': TASKS_REDIS_SENTINEL_SERVICE,
         'SOCKET_TIMEOUT': None,
-        'CONNECTION_KWARGS': {
-            'socket_connect_timeout': TASKS_REDIS_SENTINEL_TIMEOUT
-        },
+        'CONNECTION_KWARGS': {'socket_connect_timeout': TASKS_REDIS_SENTINEL_TIMEOUT},
     }
 else:
     RQ_PARAMS = {
@@ -695,12 +689,14 @@ else:
         'SSL': TASKS_REDIS_SSL,
         'SSL_CERT_REQS': None if TASKS_REDIS_SKIP_TLS_VERIFY else 'required',
     }
-RQ_PARAMS.update({
-    'DB': TASKS_REDIS_DATABASE,
-    'USERNAME': TASKS_REDIS_USERNAME,
-    'PASSWORD': TASKS_REDIS_PASSWORD,
-    'DEFAULT_TIMEOUT': RQ_DEFAULT_TIMEOUT,
-})
+RQ_PARAMS.update(
+    {
+        'DB': TASKS_REDIS_DATABASE,
+        'USERNAME': TASKS_REDIS_USERNAME,
+        'PASSWORD': TASKS_REDIS_PASSWORD,
+        'DEFAULT_TIMEOUT': RQ_DEFAULT_TIMEOUT,
+    }
+)
 
 if TASKS_REDIS_CA_CERT_PATH:
     RQ_PARAMS.setdefault('REDIS_CLIENT_KWARGS', {})
@@ -713,9 +709,7 @@ RQ_QUEUES = {
 }
 
 # Add any queues defined in QUEUE_MAPPINGS
-RQ_QUEUES.update({
-    queue: RQ_PARAMS for queue in set(QUEUE_MAPPINGS.values()) if queue not in RQ_QUEUES
-})
+RQ_QUEUES.update({queue: RQ_PARAMS for queue in set(QUEUE_MAPPINGS.values()) if queue not in RQ_QUEUES})
 
 #
 # Localization
@@ -731,9 +725,7 @@ LANGUAGES = (
     ('tr', _('Turkish')),
 )
 
-LOCALE_PATHS = (
-    BASE_DIR + '/translations',
-)
+LOCALE_PATHS = (BASE_DIR + '/translations',)
 
 if not ENABLE_LOCALIZATION:
     USE_I18N = False
@@ -807,9 +799,5 @@ for plugin_name in PLUGINS:
     # we use the plugin name as a prefix for queue name's defined in the plugin config
     # ex: mysuperplugin.mysuperqueue1
     if type(plugin_config.queues) is not list:
-        raise ImproperlyConfigured(
-            "Plugin {} queues must be a list.".format(plugin_name)
-        )
-    RQ_QUEUES.update({
-        f"{plugin_name}.{queue}": RQ_PARAMS for queue in plugin_config.queues
-    })
+        raise ImproperlyConfigured("Plugin {} queues must be a list.".format(plugin_name))
+    RQ_QUEUES.update({f"{plugin_name}.{queue}": RQ_PARAMS for queue in plugin_config.queues})

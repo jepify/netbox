@@ -4,6 +4,7 @@ from core import models
 from netbox.graphql.fields import ObjectField, ObjectListField
 from .types import *
 from utilities.graphql_optimizer import gql_query_optimizer
+from graphene_django.debug import DjangoDebug
 
 
 class CoreQuery(graphene.ObjectType):
@@ -18,3 +19,5 @@ class CoreQuery(graphene.ObjectType):
 
     def resolve_data_source_list(root, info, **kwargs):
         return gql_query_optimizer(models.DataSource.objects.all(), info)
+
+    debug = graphene.Field(DjangoDebug, name='_debug')
